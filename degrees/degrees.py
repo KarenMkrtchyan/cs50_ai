@@ -91,18 +91,23 @@ def shortest_path(source, target):
 
     If no possible path, returns None.
     """
-    path = []
     stack = QueueFrontier()
-    stack.add(source)
+    stack.add(Node(source, None, None))
+    explored = set() 
+    path = [] # [(mov1, pers2), (mov3, target)] source stared in mov1 with pers2, perse two stared in mov3 with target
     while not stack.empty():
-        neighbors = neighbors_for_person(stack.remove()) # list of (movie_id, person_id)
+        actor = stack.remove()
+        if(actor.state == target):
+            # backtrack using parents and actions to get back to start and build a path
+            while not actor.parent  == None:
+              path.insert(0, actor.action)
+              actor = actor.parent
+            return path
+        explored.add(actor.state)
+        neighbors = neighbors_for_person(actor.state) # list of (movie_id, person_id)
         for neighbor in neighbors:
-            path.append(neighbor)
-            if neighbor[1] == target:
-                return path
-            else:
-                path.pop()
-                stack.add(neighbor[1])
+            if neighbor[1] not in explored: 
+                stack.add(Node(neighbor[1], actor, neighbor)) 
 
     return None
 
