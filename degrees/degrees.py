@@ -91,9 +91,21 @@ def shortest_path(source, target):
 
     If no possible path, returns None.
     """
+    path = []
+    stack = QueueFrontier()
+    stack.add(source)
+    while not stack.empty():
+        neighbors = neighbors_for_person(stack.remove()) # list of (movie_id, person_id)
+        for neighbor in neighbors:
+            path.append(neighbor)
+            if neighbor[1] == target:
+                return path
+            else:
+                path.pop()
+                stack.add(neighbor[1])
 
-    # TODO
-    raise NotImplementedError
+    return None
+
 
 
 def person_id_for_name(name):
