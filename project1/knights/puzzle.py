@@ -33,8 +33,9 @@ knowledge1 = And(
 knowledge2 = And(
     Or(AKnight, AKnave),
     Or(BKnight, BKnave),
-    Or(And(AKnight, Or(And(AKnave, BKnave), And(AKnight, BKnight))), And(AKnave, Not(Or(And(AKnave, BKnave), And(AKnight, BKnight))))),
-    Or(And(BKnight, Or(And(AKnave, BKnight), And(AKnight, BKnave))), And(BKnave, Not(Or(And(AKnave, BKnight), And(AKnight, BKnave)))))
+    Or(And(BKnight, Or(And(AKnave, BKnight), And(AKnight, BKnave))), And(BKnave, Not(Or(And(AKnave, BKnight), And(AKnight, BKnave))))),
+    Biconditional(BKnave, AKnight),
+    Biconditional(BKnight, AKnave),
 )
 
 # Puzzle 3
@@ -42,8 +43,24 @@ knowledge2 = And(
 # B says "A said 'I am a knave'."
 # B says "C is a knave."
 # C says "A is a knight."
+A_said_knight = Symbol("A said knight")
 knowledge3 = And(
-    # TODO
+    Or(AKnight, AKnave),
+    Or(BKnight, BKnave),
+    Or(CKnight, CKnave),
+    Biconditional(A_said_knight, Or(AKnave, AKnight)), # potentially too much logic used to write this line. a knight would never say I am a knave bc thats a lie, a knave would never say I am a knave bc thats the truth
+
+    Biconditional(BKnight, A_said_knight),
+    Biconditional(BKnave, Not(A_said_knight)),
+
+    Biconditional(BKnight, CKnave),
+    Biconditional(BKnave, CKnight),
+
+    Biconditional(CKnight, AKnight),
+    Implication(AKnave, CKnave),
+
+
+    
 )
 
 
