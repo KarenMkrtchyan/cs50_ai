@@ -50,8 +50,8 @@ knowledge3 = And(
     Or(CKnight, CKnave),
     Biconditional(A_said_knight, Or(AKnave, AKnight)), # potentially too much logic used to write this line. a knight would never say I am a knave bc thats a lie, a knave would never say I am a knave bc thats the truth
 
-    Biconditional(BKnight, A_said_knight),
-    Biconditional(BKnave, Not(A_said_knight)),
+    Biconditional(BKnave, A_said_knight),
+    Biconditional(BKnight, Not(A_said_knight)),
 
     Biconditional(BKnight, CKnave),
     Biconditional(BKnave, CKnight),
