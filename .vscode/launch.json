@@ -10,7 +10,7 @@
       "request": "launch",
       "program": "${file}",
       "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}/project0/tictactoe"
+      "cwd": "${workspaceFolder}/project1/minesweeper"
     }
   ]
 }

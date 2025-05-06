@@ -33,6 +33,7 @@ class Minesweeper():
         # At first, player has found no mines
         self.mines_found = set()
 
+
     def print(self):
         """
         Prints a text-based representation
@@ -76,6 +77,8 @@ class Minesweeper():
                         count += 1
 
         return count
+    
+    
 
     def won(self):
         """
@@ -90,7 +93,7 @@ class Sentence():
     A sentence consists of a set of board cells,
     and a count of the number of those cells which are mines.
     """
-
+    # Ex: {A, B, C} = 3 
     def __init__(self, cells, count):
         self.cells = set(cells)
         self.count = count
@@ -100,32 +103,58 @@ class Sentence():
 
     def __str__(self):
         return f"{self.cells} = {self.count}"
+    
+    def __sub__(self, other):
+        if isinstance(other, Sentence):
+            return Sentence(self.cells.difference(other.cells), self.count-other.count)
+        else:
+            raise TypeError("Unsupported operand type for -")
+        
+    def issubset(self, other):
+        return self.cells.issubset(other.cells)
 
+    def copy(self):
+        return Sentence(self.cells.copy(), self.count)
+    
     def known_mines(self):
         """
         Returns the set of all cells in self.cells known to be mines.
         """
-        raise NotImplementedError
-
+        if self.count == len(self.cells):
+            return self.cells
+        else:
+            return None
+        
     def known_safes(self):
         """
         Returns the set of all cells in self.cells known to be safe.
         """
-        raise NotImplementedError
-
+        if self.count == 0:
+            return self.cells
+        else:
+            return None
+        
     def mark_mine(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be a mine.
         """
-        raise NotImplementedError
+        try:
+            self.cells.remove(cell)
+            self.count -=1
+        except:
+            return
 
     def mark_safe(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be safe.
         """
-        raise NotImplementedError
+        try:
+            print("sentence mark_safe call")
+            self.cells.remove(cell)
+        except:
+            return
 
 
 class MinesweeperAI():
@@ -149,6 +178,20 @@ class MinesweeperAI():
         # List of sentences about the game known to be true
         self.knowledge = []
 
+    def near_cells(self, cell):
+        list_of_cells = []
+
+        for i in range(cell[0] - 1, cell[0] + 2):
+            for j in range(cell[1] - 1, cell[1] + 2):
+                # Ignore the cell itself
+                if (i, j) == cell:
+                    continue
+                if 0 <= i < self.height and 0 <= j < self.width:
+                    list_of_cells.append((i,j))
+        
+        return list_of_cells
+
+
     def mark_mine(self, cell):
         """
         Marks a cell as a mine, and updates all knowledge
@@ -165,6 +208,7 @@ class MinesweeperAI():
         """
         self.safes.add(cell)
         for sentence in self.knowledge:
+            print("minesweeperAI mark_safe call")
             sentence.mark_safe(cell)
 
     def add_knowledge(self, cell, count):
@@ -182,7 +226,49 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
-        raise NotImplementedError
+        self.moves_made.add(cell)
+        self.mark_safe(cell)
+        new_knowledge = Sentence(self.near_cells(cell), count)
+        self.knowledge.append(new_knowledge)
+        madeInfference = True
+
+        while madeInfference:
+            madeInfference = False
+            for sentence in self.knowledge: # O(n^2), TODO: optimize, but how? 
+                # when a sentence becomes trivial
+                self.extract_sentence(sentence)
+                # when a subset emerges
+                for second_sentence in self.knowledge:
+                    if second_sentence == sentence:
+                        continue
+                    if second_sentence.issubset(sentence):
+                        new_knowledge = sentence - second_sentence
+                        self.extract_sentence(new_knowledge)
+                        madeInfference = True
+                    elif sentence.issubset(second_sentence):
+                        new_knowledge = second_sentence - sentence
+                        self.extract_sentence(new_knowledge)
+                        madeInfference = True
+            if madeInfference:
+                if len(new_knowledge.cells) != 0:
+                    for sentence in self.knowledge: # O(n^2), TODO: optimize, but how? 
+                        if sentence == new_knowledge:
+                            madeInfference = False
+                            break
+            if madeInfference:     
+                self.knowledge.append(new_knowledge)
+
+
+    def extract_sentence(self, sentence):
+        working_sentence = sentence.copy()
+        if working_sentence.known_safes() != None:
+            for known_save in working_sentence.known_safes():
+                print("found a save cell", known_save)
+                self.mark_safe(known_save)
+        if working_sentence.known_mines() != None:
+            for known_mine in working_sentence.known_mines():
+                print("found a mine", known_mine)
+                self.mark_mine(known_mine)   
 
     def make_safe_move(self):
         """
@@ -193,7 +279,14 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        raise NotImplementedError
+        try:
+            print("big brain move")
+            print(self.safes - self.moves_made)
+            chosen_move = (self.safes - self.moves_made).pop()
+            self.moves_made.add(chosen_move)
+            return chosen_move
+        except:
+            return None
 
     def make_random_move(self):
         """
@@ -202,4 +295,16 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        raise NotImplementedError
+        # heuristic: pick a random cell from the sentence with the highest cell#/mine# ratio
+        try:   
+            chosen_sentence = None
+            chosen_ratio = 0
+            for sentence in self.knowledge:
+                if len(sentence.cells)/sentence.count > chosen_ratio:
+                    chosen_ratio = len(sentence.cells)/sentence.count
+                    chosen_sentence = sentence
+                move = random.choice(chosen_sentence.cells)
+                self.moves_made.add(move)
+                return move
+        except:
+            return (random.randint(0,self.height-1),  random.randint(0,self.width-1))
