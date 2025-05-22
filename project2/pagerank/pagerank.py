@@ -65,7 +65,6 @@ def transition_model(corpus, page, damping_factor):
 
     # Add the probability of going to a page linked to by current page
     possible_pages = corpus[page]
-    print("possible pages", possible_pages)
     for page2 in possible_pages:
         model[page2] += 1/len(possible_pages) * damping_factor
 
@@ -81,10 +80,30 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    # pick a page at random,
-    
+    # define a dict with each of the pages as a key
+    # pick a page at random
+    # start moving around according to transition_model
+    # increment the counter for each page visited
+    # divive by the sample count to get a page ranking
 
-    raise NotImplementedError
+    page_ranks = {}
+    for page_name in corpus:
+        page_ranks[page_name] = 0
+
+    next_page = random.choice(tuple(corpus))
+    trans_model = transition_model(corpus, next_page, damping_factor)
+
+    for i in range(n):
+        page_ranks[next_page] += 1
+        elements = list(trans_model.keys())
+        weights = list(trans_model.values())
+        next_page = random.choices(elements, weights=weights, k=1)[0]
+        trans_model = transition_model(corpus, next_page, damping_factor)
+        
+    for page_name in corpus:
+        page_ranks[page_name] /= n
+
+    return page_ranks
 
 
 def iterate_pagerank(corpus, damping_factor):
